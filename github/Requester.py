@@ -181,17 +181,20 @@ class Requester:
         return responseHeaders, output
 
     def __createException(self, status, headers, output):
-        if status == 401 and output.get("message") == "Bad credentials":
-            cls = GithubException.BadCredentialsException
-        elif status == 401 and 'x-github-otp' in headers and re.match(r'.*required.*', headers['x-github-otp']):
-            cls = GithubException.TwoFactorException  # pragma no cover (Should be covered)
-        elif status == 403 and output.get("message").startswith("Missing or invalid User Agent string"):
-            cls = GithubException.BadUserAgentException
-        elif status == 403 and output.get("message").lower().startswith("api rate limit exceeded"):
-            cls = GithubException.RateLimitExceededException
-        elif status == 404 and output.get("message") == "Not Found":
-            cls = GithubException.UnknownObjectException
-        else:
+        try:
+            if status == 401 and output.get("message") == "Bad credentials":
+                cls = GithubException.BadCredentialsException
+            elif status == 401 and 'x-github-otp' in headers and re.match(r'.*required.*', headers['x-github-otp']):
+                cls = GithubException.TwoFactorException  # pragma no cover (Should be covered)
+            elif status == 403 and output.get("message").startswith("Missing or invalid User Agent string"):
+                cls = GithubException.BadUserAgentException
+            elif status == 403 and output.get("message").lower().startswith("api rate limit exceeded"):
+                cls = GithubException.RateLimitExceededException
+            elif status == 404 and output.get("message") == "Not Found":
+                cls = GithubException.UnknownObjectException
+            else:
+                cls = GithubException.GithubException
+        except AttributeError:
             cls = GithubException.GithubException
         return cls(status, output)
 
